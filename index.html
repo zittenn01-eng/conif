@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>날씨 조건문 시뮬레이터 - Python 입문</title>
+  <meta name="description" content="파이썬 if/elif/else 조건문을 직접 수정하면서 배우는 초보자용 인터랙티브 학습 도구" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- 배경 장식 -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🐍</span>
+        <div>
+          <div class="logo-title">Python 조건문 <span class="accent">학습</span> 시뮬레이터</div>
+          <div class="logo-sub">if · elif · else 를 직접 수정하며 배워요</div>
+        </div>
+      </div>
+      <div class="level-badge">🎓 입문 레벨</div>
+    </div>
+  </header>
+
+  <!-- 전체 레이아웃 -->
+  <main class="main">
+
+    <!-- ───── 왼쪽: 코드 편집기 ───── -->
+    <section class="panel code-panel" aria-label="파이썬 코드 편집기">
+
+      <!-- 편집기 헤더 -->
+      <div class="panel-header">
+        <span class="panel-icon">📝</span>
+        <h2 class="panel-title">파이썬 코드 편집기</h2>
+        <div class="editor-btns">
+          <button class="btn-icon" id="resetBtn" onclick="resetCode()" title="코드를 처음 상태로 되돌립니다">
+            🔄 초기화
+          </button>
+          <button class="btn-icon btn-copy" id="copyBtn" onclick="copyCode()" title="코드 복사">
+            📋 복사
+          </button>
+        </div>
+      </div>
+
+      <!-- 파일 탭 -->
+      <div class="file-tab" aria-label="파일 이름">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        <span class="file-name">weather.py</span>
+      </div>
+
+      <!-- CodeMirror 에디터 영역 -->
+      <div class="editor-wrap" id="editorWrap">
+        <textarea id="codeArea"></textarea>
+      </div>
+
+      <!-- 에디터 하단 상태바 -->
+      <div class="editor-statusbar">
+        <span id="cursorPos">줄: 1 | 컬럼: 1</span>
+        <span class="lang-badge">Python 3</span>
+      </div>
+
+      <!-- 실행 버튼 -->
+      <button class="run-btn" id="runBtn" onclick="runCode()">
+        <span class="run-icon">▶</span>
+        코드 실행하기
+      </button>
+
+    </section>
+
+    <!-- ───── 오른쪽: 시뮬레이터 & 설명 ───── -->
+    <div class="right-col">
+
+      <!-- 날씨 입력 카드 -->
+      <section class="panel weather-panel" aria-label="날씨 입력">
+        <div class="panel-header">
+          <span class="panel-icon">⛅</span>
+          <h2 class="panel-title">날씨 선택</h2>
+          <span class="panel-hint">버튼을 누르면 코드 변수가 바뀝니다</span>
+        </div>
+
+        <div class="weather-row">
+          <button class="w-btn active" id="btn-맑음" data-weather="맑음" onclick="selectWeather('맑음')">
+            <span class="w-emoji">☀️</span>
+            <span class="w-label">맑음</span>
+          </button>
+          <button class="w-btn" id="btn-흐림" data-weather="흐림" onclick="selectWeather('흐림')">
+            <span class="w-emoji">☁️</span>
+            <span class="w-label">흐림</span>
+          </button>
+          <button class="w-btn" id="btn-비" data-weather="비" onclick="selectWeather('비')">
+            <span class="w-emoji">🌧️</span>
+            <span class="w-label">비</span>
+          </button>
+        </div>
+
+        <!-- 변수 미리보기 -->
+        <div class="var-preview">
+          <span class="var-kw">weather</span>
+          <span class="var-eq">=</span>
+          <span class="var-val" id="varDisplay">"맑음"</span>
+        </div>
+      </section>
+
+      <!-- 실행 결과 카드 -->
+      <section class="panel result-panel" aria-label="실행 결과" id="resultPanel">
+        <div class="panel-header">
+          <span class="panel-icon">🍽️</span>
+          <h2 class="panel-title">실행 결과</h2>
+        </div>
+
+        <div class="result-body" id="resultBody">
+          <div class="result-idle">
+            <div class="idle-icon">▶</div>
+            <div class="idle-text">코드 실행 버튼을 눌러보세요!</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 조건문 개념 설명 카드 -->
+      <section class="panel concept-panel" aria-label="조건문 개념 설명">
+        <div class="panel-header">
+          <span class="panel-icon">💡</span>
+          <h2 class="panel-title">조건문이란?</h2>
+        </div>
+        <div class="concept-steps">
+          <div class="concept-item">
+            <div class="kw-badge kw-if">if</div>
+            <div class="concept-desc">
+              <strong>첫 번째 조건</strong>을 검사합니다.<br/>
+              <code>if weather == "맑음":</code>
+            </div>
+          </div>
+          <div class="concept-arrow">↓</div>
+          <div class="concept-item">
+            <div class="kw-badge kw-elif">elif</div>
+            <div class="concept-desc">
+              앞 조건이 <strong>거짓</strong>일 때 다음 조건을 검사합니다.<br/>
+              <code>elif weather == "비":</code>
+            </div>
+          </div>
+          <div class="concept-arrow">↓</div>
+          <div class="concept-item">
+            <div class="kw-badge kw-else">else</div>
+            <div class="concept-desc">
+              <strong>모든 조건이 거짓</strong>일 때 실행됩니다.
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /right-col -->
+
+  </main>
+
+  <!-- 하단 도전 과제 배너 -->
+  <section class="challenge-bar">
+    <div class="challenge-inner">
+      <span class="challenge-icon">🏆</span>
+      <div class="challenge-text">
+        <strong>도전 과제:</strong>
+        코드를 수정해서 <em>"흐림"</em> 일 때 다른 음식으로 바꿔보세요!
+        <code>menu = "..."</code> 부분을 수정하면 됩니다.
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    🐍 Python 조건문 학습 시뮬레이터 &nbsp;|&nbsp; 코드를 직접 수정하고 실행해보세요!
+  </footer>
+
+  <!-- 복사 완료 토스트 -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
